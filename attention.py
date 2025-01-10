@@ -11,5 +11,10 @@ class Attention(nn.Module):
 
     def forward(self, x: torch.Tensor, device: torch.device|None=None) -> torch.Tensor:
         x.to(device)
-        # todo
-        return x
+
+        qkv = self.to_qkv(x).chunk(3, dim=-1)
+        q, k, v = map(lambda t: t.reshape(*t.shape[:-1], self.heads, -1).transpose(1, 2), qkv)
+        dots = torch.einsum('b h i d, b h j d -> b h i j', q, k) * self.scale
+        attn = dots.softmax(dim=-1)
+        out = torch.einsum('b h i j, b h j d -> b h i d', attn, v).transpose(1, 2).reshape(*x.shape)
+        return self.to_out(out)

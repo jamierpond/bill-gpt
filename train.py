@@ -10,14 +10,14 @@ def train():
     model = Transformer(vocab_size=256)  # Adjust vocab size
     opt = AdamW(model.parameters())
     dataset = TextDataset(BILL_PATH)
-    MAX_TRAIN_SIZE = 2
-    loader = DataLoader(dataset, batch_size=32)
+    MAX_TRAIN_STEPS = 200
+    loader = DataLoader(dataset, batch_size=16)
 
-    for epoch in range(1):
+    for epoch in range(5):
         print(f"Epoch {epoch}")
         step = 0
         for x, y in tqdm.tqdm(loader):
-            if step > MAX_TRAIN_SIZE:
+            if step > MAX_TRAIN_STEPS:
                 print("Done training")
                 break
             step += 1
@@ -28,7 +28,7 @@ def train():
             )
             loss.backward()
             opt.step()
-            print(loss.item())
+            tqdm.tqdm.write(f"Loss: {loss.item()}")
 
     # save model
     torch.save(model.state_dict(), 'model.pth')
