@@ -18,7 +18,7 @@ class DumbTokenizer():
         token_index = [to_ascii_int(i) for i in characters]
         return token_index
 
-    def detokenize(self, x: list[int]):
+    def decode(self, x: list[int]):
         return ''.join([chr(i) for i in x])
 
 
@@ -30,13 +30,13 @@ class TextDataset(Dataset):
 
     def __len__(self):
         # only unique sequences
-        l = len(self.text) // self.ctx_len
+        l = len(self.text) - self.ctx_len
         # margin
         return l - 2
 
     def __getitem__(self, i):
-        context_index = i * self.ctx_len
-        other_index = (i + 1) * self.ctx_len
+        context_index = i
+        other_index = i + self.ctx_len
         def get_text(i):
             text = self.text[i:i+self.ctx_len]
             tokens = self.tokenizer([text])
@@ -48,9 +48,9 @@ class TextDataset(Dataset):
 def test_basic_tokenizer():
     tokenizer = DumbTokenizer()
     tokens = tokenizer(['hello world', 'goodbye world'])
-    detokenized = tokenizer.detokenize(tokens[0])
+    detokenized = tokenizer.decode(tokens[0])
     assert detokenized == 'hello world'
-    detokenized = tokenizer.detokenize(tokens[1])
+    detokenized = tokenizer.decode(tokens[1])
     assert detokenized == 'goodbye world'
     print('Success!')
 
@@ -65,8 +65,8 @@ def test_text_dataset():
     assert len(x) == 256, f'Expected 1, got {len(x)}, shape: {x.shape}'
     assert len(y) == 256, f'Expected 1, got {len(y)}, shape: {y.shape}'
     tokenizer = DumbTokenizer()
-    x = tokenizer.detokenize(x.int().tolist())
-    y = tokenizer.detokenize(y.int().tolist())
+    x = tokenizer.decode(x.int().tolist())
+    y = tokenizer.decode(y.int().tolist())
 
     print(x)
     print(y)
