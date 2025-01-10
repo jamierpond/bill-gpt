@@ -22,11 +22,19 @@ class Transformer(nn.Module):
         self.to_logits = nn.Linear(dim, vocab_size)
 
     def forward(self, x):
-        breakpoint()
         x = self.token_emb(x) + self.pos_emb[:, :x.shape[1]]
 
-        for attn, ln1, ff1, gelu, ff2, ln2 in self.layers:
+        for sub_list in self.layers:
+            assert isinstance(sub_list, nn.ModuleList)
+            attn, ln1, ff1, gelu, ff2, ln2 = sub_list
             x = ln1(x + attn(x))
             x = ln2(x + ff2(gelu(ff1(x))))
 
         return self.to_logits(x)
+
+
+if __name__ == "__main__":
+    model = Transformer(vocab_size=256)
+    x = torch.randint(0, 256, (1, 1024))
+    out = model(x)
+    print(out.shape)

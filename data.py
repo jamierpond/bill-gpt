@@ -1,5 +1,7 @@
+
 from pathlib import Path
 from torch.utils.data import Dataset
+import torch
 
 BILL_PATH=Path('data/bill.txt')
 
@@ -31,7 +33,7 @@ class TextDataset(Dataset):
         def get_text(i):
             text = self.text[i:i+self.ctx_len]
             tokens = self.tokenizer([text])
-            return tokens
+            return torch.Tensor(tokens[0]).long()
         return get_text(i), get_text(i+1)
 
 
@@ -51,13 +53,14 @@ def test_text_dataset():
     size = len(dataset)
     print(size)
     x, y = dataset[size // 2]
-    assert len(x) == 1
-    assert len(y) == 1
-    assert len(x[0]) == 256
-    assert len(y[0]) == 256
+    assert x.dtype == torch.int64, f'Expected int64, got {x.dtype}'
+    assert y.dtype == torch.int64, f'Expected int64, got {y.dtype}'
+    assert len(x) == 256, f'Expected 1, got {len(x)}, shape: {x.shape}'
+    assert len(y) == 256, f'Expected 1, got {len(y)}, shape: {y.shape}'
     tokenizer = DumbTokenizer()
-    x = tokenizer.detokenize(x[0])
-    y = tokenizer.detokenize(y[0])
+    x = tokenizer.detokenize(x.int().tolist())
+    y = tokenizer.detokenize(y.int().tolist())
+
     print(x)
     print(y)
     print('Success!')
