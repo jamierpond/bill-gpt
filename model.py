@@ -1,9 +1,10 @@
 import torch
+import torch.nn.functional as F
 import torch.nn as nn
-from attention import Attention
+from attention import SingleSelfHeadAttention
 
 class Transformer(nn.Module):
-    def __init__(self, vocab_size, dim=512, depth=6, heads=8):
+    def __init__(self, vocab_size, dim=128, depth=128, heads=8):
         super().__init__()
         self.token_emb = nn.Embedding(vocab_size, dim)
         self.pos_emb = nn.Parameter(torch.zeros(1, 1024, dim))
@@ -11,7 +12,7 @@ class Transformer(nn.Module):
         self.layers = nn.ModuleList([])
         for _ in range(depth):
             self.layers.append(nn.ModuleList([
-                Attention(dim, heads),
+                SingleSelfHeadAttention(dim),
                 nn.LayerNorm(dim),
                 nn.Linear(dim, dim * 4),
                 nn.GELU(),
@@ -22,7 +23,11 @@ class Transformer(nn.Module):
         self.to_logits = nn.Linear(dim, vocab_size)
 
     def forward(self, x):
-        x = self.token_emb(x) + self.pos_emb[:, :x.shape[1]]
+
+        token_emb = self.token_emb(x)
+        pos_emb = self.pos_emb[:, :x.shape[1]]
+        x = token_emb + pos_emb
+
 
         for sub_list in self.layers:
             assert isinstance(sub_list, nn.ModuleList)

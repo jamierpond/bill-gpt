@@ -30,7 +30,9 @@ class TextDataset(Dataset):
 
     def __len__(self):
         # only unique sequences
-        return len(self.text) // self.ctx_len
+        l = len(self.text) // self.ctx_len
+        # margin
+        return l - 2
 
     def __getitem__(self, i):
         context_index = i * self.ctx_len

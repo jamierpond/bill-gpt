@@ -5,33 +5,42 @@ from torch.utils.data import DataLoader
 from data import TextDataset, BILL_PATH
 from model import Transformer
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 def train():
     model = Transformer(vocab_size=256)  # Adjust vocab size
-    opt = AdamW(model.parameters())
+    num_params = sum(p.numel() for p in model.parameters())
+    print(f"Number of parameters: {num_params}")
+    model.to(device)
+    opt = AdamW(model.parameters(), lr=5e-3)
     dataset = TextDataset(BILL_PATH)
-    MAX_TRAIN_STEPS = 200
-    loader = DataLoader(dataset, batch_size=16)
+    loader = DataLoader(dataset, batch_size=64)
 
-    for epoch in range(5):
+    lowest_loss = float("inf")
+    for epoch in range(10):
         print(f"Epoch {epoch}")
         step = 0
         for x, y in tqdm.tqdm(loader):
-            if step > MAX_TRAIN_STEPS:
-                print("Done training")
-                break
+            x, y = x.to(device), y.to(device)
             step += 1
             opt.zero_grad()
             out = model(x)
+            out = out.permute(0, 2, 1)
+
             loss = torch.nn.functional.cross_entropy(
-                out.view(-1, 256), y.view(-1)
+                out, y
             )
             loss.backward()
             opt.step()
-            tqdm.tqdm.write(f"Loss: {loss.item()}")
+            loss = loss.item()
+            lowest_loss = min(lowest_loss, loss)
+            if step % 50 == 0:
+                tqdm.tqdm.write(f"Loss: {loss}, Lowest: {lowest_loss}")
 
-    # save model
-    torch.save(model.state_dict(), 'model.pth')
+        # save model
+        tqdm.tqdm.write("Saving model...")
+        torch.save(model.state_dict(), 'model.pth')
 
 if __name__ == "__main__":
     train()

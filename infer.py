@@ -1,27 +1,29 @@
 import torch
-from data import DumbTokenizer
+from torch.utils.data import DataLoader
+from data import BILL_PATH, DumbTokenizer, TextDataset
 from model import Transformer
 
-def generate(model, start_text, max_len=256, temp=0.8):
-    model.eval()
+def generate(model, initial_context, max_len=256, temp=0.8):
     tokenizer = DumbTokenizer()
-    x = tokenizer.tokenize(start_text)
-    x = torch.Tensor(x).to(torch.int64).unsqueeze(1)
+    for _ in range(max_len):
+        logits = model(initial_context)
+        next_token = torch.multinomial(torch.softmax(logits[:, -1, :] / temp, dim=-1), 1)
+        next_token = (torch.Tensor(next_token).int())
+        initial_context = torch.cat([initial_context, next_token], dim=-1)
+        token = next_token.item()
+        char = tokenizer.detokenize([int(token)])
+        print(char, end="")
 
-    logits = model(x)
-    y = torch.multinomial(logits[:, -1, :].squeeze().softmax(-1), 1)
-
-
-    y = y.cpu().int().tolist()
-    # flatten nested lists
-    y = [item for sublist in y for item in sublist]
-    breakpoint()
-
-    x = tokenizer.detokenize(y)
-
-    return x
 
 if __name__ == "__main__":
+    ds = TextDataset(BILL_PATH)
+    input_tokens, y = ds[5000]
     model = Transformer(vocab_size=256)
     model.load_state_dict(torch.load("model.pth", weights_only=True))
-    print(generate(model, "To be, or not to be: "))
+
+    model.to("cuda")
+    input_tokens = input_tokens.to("cuda")
+
+    initial_context = input_tokens.unsqueeze(0)
+    out = generate(model, initial_context)
+
