@@ -28,13 +28,18 @@ class TextDataset(Dataset):
         self.ctx_len = ctx_len
         self.tokenizer = DumbTokenizer()
 
-    def __len__(self): return len(self.text) - self.ctx_len
+    def __len__(self):
+        # only unique sequences
+        return len(self.text) // self.ctx_len
+
     def __getitem__(self, i):
+        context_index = i * self.ctx_len
+        other_index = (i + 1) * self.ctx_len
         def get_text(i):
             text = self.text[i:i+self.ctx_len]
             tokens = self.tokenizer([text])
             return torch.Tensor(tokens[0]).long()
-        return get_text(i), get_text(i+1)
+        return get_text(context_index), get_text(other_index)
 
 
 

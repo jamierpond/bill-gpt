@@ -1,3 +1,4 @@
+import tqdm
 import torch
 from torch.optim import AdamW
 from torch.utils.data import DataLoader
@@ -9,12 +10,11 @@ def train():
     model = Transformer(vocab_size=256)  # Adjust vocab size
     opt = AdamW(model.parameters())
     dataset = TextDataset(BILL_PATH)
-    loader = DataLoader(dataset, batch_size=4)
+    loader = DataLoader(dataset, batch_size=32)
 
     for epoch in range(1):
         print(f"Epoch {epoch}")
-        i = 0
-        for x, y in loader:
+        for x, y in tqdm.tqdm(loader):
             opt.zero_grad()
             out = model(x)
             loss = torch.nn.functional.cross_entropy(
@@ -22,9 +22,10 @@ def train():
             )
             loss.backward()
             opt.step()
-            if i % 100 == 0:
-                print(f"Batch {i} Loss: {loss.item()}")
-            i += 1
+            print(loss.item())
+
+    # save model
+    torch.save(model.state_dict(), 'model.pth')
 
 if __name__ == "__main__":
     train()
