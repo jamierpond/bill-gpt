@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 from attention import Attention
 
@@ -21,6 +22,7 @@ class Transformer(nn.Module):
         self.to_logits = nn.Linear(dim, vocab_size)
 
     def forward(self, x):
+        breakpoint()
         x = self.token_emb(x) + self.pos_emb[:, :x.shape[1]]
 
         for attn, ln1, ff1, gelu, ff2, ln2 in self.layers:
