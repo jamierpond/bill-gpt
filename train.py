@@ -5,7 +5,6 @@ import torch
 from torch.optim import AdamW
 from torch.utils.data import DataLoader
 from data import TextDataset, BILL_PATH
-import torch.nn as nn
 from model import Transformer
 from data import DumbTokenizer
 from infer import generate
@@ -35,23 +34,26 @@ def analyze_predictions(model, loader):
 
 
 def train():
-    model = Transformer(vocab_size=256)
-    # load checkpoint
-    model.load_state_dict(torch.load("best-model.pth", weights_only=True, map_location=device))
 
+    dataset = TextDataset(BILL_PATH)
+    loader = DataLoader(dataset, batch_size=16, shuffle=True)
+    vocab_size = dataset.tokenizer.vocab_size
+    model = Transformer(vocab_size=vocab_size)
+
+    # load checkpoint
+    # model.load_state_dict(torch.load("best-model.pth", weights_only=True, map_location=device))
+    model.to(device)
     num_params = sum(p.numel() for p in model.parameters())
     print(f"Number of parameters: {num_params}")
-    model.to(device)
     opt = AdamW(model.parameters(), lr=1e-3)
-    dataset = TextDataset(BILL_PATH)
-    loader = DataLoader(dataset, batch_size=128)
 
     lowest_loss = float("inf")
     for epoch in range(2000):
         print(f"Epoch {epoch}")
         step = 0
         example = None
-        for x, y in tqdm.tqdm(loader):
+        assert len(loader) > 0, "No data in loader"
+        for x, y in loader:
             x, y = x.to(device), y.to(device)
             example = x
             step += 1
@@ -63,7 +65,7 @@ def train():
 
             # Reshape logits and target for loss calculation
             # Use contiguous() to ensure proper memory layout
-            logits = logits.view(-1, 256).contiguous()
+            logits = logits.view(-1, vocab_size).contiguous()
             targets = y.view(-1).contiguous()
 
             loss = F.cross_entropy(logits, targets)
