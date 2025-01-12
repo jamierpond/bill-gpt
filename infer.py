@@ -6,7 +6,10 @@ from model import Transformer
 def generate(model, initial_context, max_len=256, temp=0.8):
     tokenizer = DumbTokenizer()
     for _ in range(max_len):
-        logits = model(initial_context)
+        if initial_context.size(1) > 1024:
+            # pop the first token
+            initial_context = initial_context[:, 1:]
+        logits = model(initial_context, causal=True)
         next_token = torch.multinomial(torch.softmax(logits[:, -1, :] / temp, dim=-1), 1)
         next_token = (torch.Tensor(next_token).int())
         initial_context = torch.cat([initial_context, next_token], dim=-1)
@@ -16,15 +19,22 @@ def generate(model, initial_context, max_len=256, temp=0.8):
     print()
 
 
+prompt = """
+ROMEO:
+    O, strike my face. I am the dragon
+"""
+
 if __name__ == "__main__":
     ds = TextDataset(BILL_PATH)
-    input_tokens, y = ds[5000]
-    model = Transformer(vocab_size=256)
-    model.load_state_dict(torch.load("best-model.pth", weights_only=True))
+    # input_tokens, _ = ds[5000]
+    input_tokens = ds.tokenizer.tokenize(prompt)
+    input_tokens = torch.Tensor(input_tokens).int().unsqueeze(0)
+    model = Transformer(vocab_size=ds.tokenizer.vocab_size)
+    model.load_state_dict(torch.load("model.pth", weights_only=True))
 
     model.to("cuda")
     input_tokens = input_tokens.to("cuda")
 
-    initial_context = input_tokens.unsqueeze(0)
-    out = generate(model, initial_context)
+    initial_context = input_tokens
+    out = generate(model, initial_context, max_len=int(1e18))
 

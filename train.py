@@ -1,4 +1,3 @@
-
 import tqdm
 import torch.nn.functional as F
 import torch
@@ -10,6 +9,16 @@ from data import DumbTokenizer
 from infer import generate
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+FAUSTUS = """
+Settle thy studies, Faustus, and begin
+To sound the depth of that thou wilt profess.
+Having commenced, be a divine in show,
+Yet level at the end of every art,
+And live and die in Aristotle's works.
+"""
+
 
 def analyze_predictions(model, loader):
     model.eval()
@@ -41,7 +50,7 @@ def train():
     model = Transformer(vocab_size=vocab_size)
 
     # load checkpoint
-    # model.load_state_dict(torch.load("best-model.pth", weights_only=True, map_location=device))
+    model.load_state_dict(torch.load("best-model.pth", weights_only=True, map_location=device))
     model.to(device)
     num_params = sum(p.numel() for p in model.parameters())
     print(f"Number of parameters: {num_params}")
@@ -77,7 +86,9 @@ def train():
                 torch.save(model.state_dict(), f'best-model.pth')
 
             if step % 150 == 0:
-                generate(model, x[0].unsqueeze(0))
+                faustus_tokens = dataset.tokenizer.tokenize(FAUSTUS)
+                faustus_tokens = torch.Tensor(faustus_tokens).int().unsqueeze(0).to(device)
+                generate(model, faustus_tokens)
 
             if step % 20 == 0:
                 tqdm.tqdm.write(f"Loss: {loss.item()}, Lowest: {lowest_loss}")

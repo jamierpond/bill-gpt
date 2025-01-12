@@ -3,7 +3,7 @@ import torch.nn as nn
 from attention import MultiHeadAttention
 
 class Transformer(nn.Module):
-    def __init__(self, vocab_size, dim=128, depth=16, heads=8, causal=False):
+    def __init__(self, vocab_size, dim=128, depth=16, heads=8):
         super().__init__()
         self.token_emb = nn.Embedding(vocab_size, dim)
 
@@ -24,9 +24,9 @@ class Transformer(nn.Module):
         self.to_logits = nn.Linear(dim, vocab_size)
 
     @staticmethod
-    def get_causal_mask(seq_len):
+    def get_causal_mask(seq_len, device):
         mask = torch.triu(torch.ones(seq_len, seq_len), diagonal=1).bool()
-        return mask
+        return mask.to(device)
 
     def forward(self, x, causal=False):
         batch_size, seq_len = x.size()
@@ -40,7 +40,7 @@ class Transformer(nn.Module):
         assert token_emb.shape == pos_emb.shape
         x = token_emb + pos_emb
 
-        mask = self.get_causal_mask(seq_len) if causal else None
+        mask = self.get_causal_mask(seq_len, x.device) if causal else None
         for sub_list in self.layers:
             assert isinstance(sub_list, nn.ModuleList)
             attn, ln1, ff1, gelu, ff2, ln2 = sub_list
