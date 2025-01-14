@@ -20,28 +20,6 @@ And live and die in Aristotle's works.
 """
 
 
-def analyze_predictions(model, loader):
-    model.eval()
-    with torch.no_grad():
-        x, y = next(iter(loader))
-        x = x.to(device)
-        logits = model(x)
-
-        # Get top predictions for a few positions
-        probs = F.softmax(logits[0, :5], dim=-1)  # First 5 positions of first batch item
-        top_preds = torch.topk(probs, k=3, dim=-1)
-
-        tokenizer = DumbTokenizer()
-        for pos, (values, indices) in enumerate(zip(top_preds.values, top_preds.indices)):
-            actual = tokenizer.decode([y[0, pos].item()])
-            predictions = [tokenizer.decode([idx.item()]) for idx in indices]
-            print(f"\nPosition {pos}")
-            print(f"Actual: '{actual}'")
-            print("Top predictions:")
-            for pred, prob in zip(predictions, values):
-                print(f"'{pred}': {prob:.3f}")
-
-
 def train():
 
     dataset = TextDataset(BILL_PATH)
@@ -92,12 +70,6 @@ def train():
 
             if step % 20 == 0:
                 tqdm.tqdm.write(f"Loss: {loss.item()}, Lowest: {lowest_loss}")
-
-        # analyze_predictions()
-        tqdm.tqdm.write("======== Generated text =================")
-        assert example is not None
-        generate(model, example[0].unsqueeze(0))
-        tqdm.tqdm.write("=========================================")
 
         # save model
         tqdm.tqdm.write("Saving model...")
