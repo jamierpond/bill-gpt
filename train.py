@@ -5,7 +5,6 @@ from torch.optim import AdamW
 from torch.utils.data import DataLoader
 from data import TextDataset, BILL_PATH
 from model import Transformer
-from data import DumbTokenizer
 from infer import generate
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -21,14 +20,12 @@ And live and die in Aristotle's works.
 
 
 def train():
-
     dataset = TextDataset(BILL_PATH)
     loader = DataLoader(dataset, batch_size=16, shuffle=True)
     vocab_size = dataset.tokenizer.vocab_size
     model = Transformer(vocab_size=vocab_size)
 
     # load checkpoint
-    model.load_state_dict(torch.load("best-model.pth", weights_only=True, map_location=device))
     model.to(device)
     num_params = sum(p.numel() for p in model.parameters())
     print(f"Number of parameters: {num_params}")
@@ -38,11 +35,9 @@ def train():
     for epoch in range(2000):
         print(f"Epoch {epoch}")
         step = 0
-        example = None
         assert len(loader) > 0, "No data in loader"
         for x, y in loader:
             x, y = x.to(device), y.to(device)
-            example = x
             step += 1
             opt.zero_grad()
             out = model(x)

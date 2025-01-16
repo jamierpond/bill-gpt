@@ -3,35 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import math
 
-class SingleSelfHeadAttention(nn.Module):
-    def __init__(self, embed_dim):
-        super().__init__()
-        self.embed_dim = embed_dim
-        self.q_proj = nn.Linear(embed_dim, embed_dim)
-        self.k_proj = nn.Linear(embed_dim, embed_dim)
-        self.v_proj = nn.Linear(embed_dim, embed_dim)
-        self.out_proj = nn.Linear(embed_dim, embed_dim)
-        self.scaling = 1 / math.sqrt(embed_dim)
-
-    def forward(self, x):
-        batch_size, seq_len, _ = x.shape
-
-        q = self.q_proj(x)
-        k = self.k_proj(x)
-        v = self.v_proj(x)
-
-        # Add causal mask
-        mask = torch.triu(torch.ones(seq_len, seq_len), diagonal=1).bool()
-        mask = mask.to(x.device)
-
-        attention_weights = torch.bmm(q, k.transpose(1, 2)) * self.scaling
-        attention_weights = attention_weights.masked_fill(mask, float('-inf'))
-        attention_weights = F.softmax(attention_weights, dim=-1)
-
-        output = torch.bmm(attention_weights, v)
-        return self.out_proj(output)
-
-
 
 class MultiHeadAttention(nn.Module):
     def __init__(self, embed_dim, num_heads):
@@ -48,11 +19,6 @@ class MultiHeadAttention(nn.Module):
         self.out_proj = nn.Linear(embed_dim, embed_dim)
         self.scaling = 1 / math.sqrt(self.head_dim)
 
-    @staticmethod
-    def get_causal_mask(seq_len):
-        mask = torch.triu(torch.ones(seq_len, seq_len), diagonal=1).bool()
-        return mask
-
     def forward(self, x, mask=None):
         batch_size, seq_len, _ = x.shape
 
@@ -63,9 +29,13 @@ class MultiHeadAttention(nn.Module):
 
         # Compute attention scores
         attention_weights = torch.matmul(q, k.transpose(-2, -1)) * self.scaling
+
         if mask is not None:
             assert isinstance(mask, torch.Tensor), "mask must be a torch.Tensor"
             mask = mask.unsqueeze(0).unsqueeze(1)  # [1, 1, seq_len, channel]
+            # cat num heads in dim 1
+            mask = mask.expand(batch_size, self.num_heads, seq_len, seq_len)
+            assert mask.shape == attention_weights.shape, f"mask shape {mask.shape} must match attention_weights shape {attention_weights.shape}"
             attention_weights = attention_weights.masked_fill(mask, float('-inf'))
 
 #         causal_mask = torch.triu(torch.ones(seq_len, seq_len), diagonal=1).bool()

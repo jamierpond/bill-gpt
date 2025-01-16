@@ -25,7 +25,7 @@ class Transformer(nn.Module):
 
     @staticmethod
     def get_causal_mask(seq_len, device):
-        mask = torch.triu(torch.ones(seq_len, seq_len), diagonal=1).bool()
+        mask = torch.zeros(seq_len, seq_len, device=device).bool()
         return mask.to(device)
 
     def forward(self, x, causal=False):
