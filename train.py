@@ -32,11 +32,11 @@ def train():
     opt = AdamW(model.parameters(), lr=1e-3)
 
     lowest_loss = float("inf")
-    for epoch in range(2000):
+    for epoch in range(2):
         print(f"Epoch {epoch}")
         step = 0
         assert len(loader) > 0, "No data in loader"
-        for x, y in loader:
+        for x, y in tqdm.tqdm(loader):
             x, y = x.to(device), y.to(device)
             step += 1
             opt.zero_grad()
