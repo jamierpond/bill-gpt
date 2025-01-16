@@ -16,6 +16,7 @@ from .infer import generate
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+
 def train():
     dataset = TextDataset(BILL_PATH)
     loader = DataLoader(dataset, batch_size=16, shuffle=True)
@@ -53,19 +54,22 @@ def train():
             lowest_loss = min(lowest_loss, loss.item())
             if lowest_loss == loss.item():
                 tqdm.tqdm.write(f"New lowest loss: {lowest_loss}, saving model...")
-                torch.save(model.state_dict(), f'best-model.pth')
+                torch.save(model.state_dict(), f"best-model.pth")
 
             if step % 150 == 0:
                 faustus_tokens = dataset.tokenizer.tokenize(FAUSTUS)
-                faustus_tokens = torch.Tensor(faustus_tokens).int().unsqueeze(0).to(device)
+                faustus_tokens = (
+                    torch.Tensor(faustus_tokens).int().unsqueeze(0).to(device)
+                )
                 generate(model, faustus_tokens)
 
             if step % 20 == 0:
                 tqdm.tqdm.write(f"Loss: {loss.item()}, Lowest: {lowest_loss}")
 
-        # save model
+        # save model
         tqdm.tqdm.write("Saving model...")
-        torch.save(model.state_dict(), 'model.pth')
+        torch.save(model.state_dict(), "model.pth")
+
 
 if __name__ == "__main__":
     train()

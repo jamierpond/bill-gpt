@@ -12,11 +12,15 @@ def analyze_predictions():
         logits = model(x)
 
         # Get top predictions for a few positions
-        probs = F.softmax(logits[0, :5], dim=-1)  # First 5 positions of first batch item
+        probs = F.softmax(
+            logits[0, :5], dim=-1
+        )  # First 5 positions of first batch item
         top_preds = torch.topk(probs, k=3, dim=-1)
 
         tokenizer = DumbTokenizer()
-        for pos, (values, indices) in enumerate(zip(top_preds.values, top_preds.indices)):
+        for pos, (values, indices) in enumerate(
+            zip(top_preds.values, top_preds.indices)
+        ):
             actual = tokenizer.detokenize([y[0, pos].item()])
             predictions = [tokenizer.detokenize([idx.item()]) for idx in indices]
             print(f"\nPosition {pos}")

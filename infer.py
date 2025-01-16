@@ -19,7 +19,9 @@ def print_token_str(token_str):
     print(token_str, end="")
 
 
-def generate(model, initial_context, max_len=256, temp=0.8, next_token_callback=print_token_str):
+def generate(
+    model, initial_context, max_len=256, temp=0.8, next_token_callback=print_token_str
+):
     tokenizer = DumbTokenizer()
 
     cycle_size_samples = 50
@@ -34,8 +36,10 @@ def generate(model, initial_context, max_len=256, temp=0.8, next_token_callback=
         logits = model(initial_context, causal=True)
         phase = advance_sine_phase(phase, 1, cycle_size_samples)
         temp = temp_bias + abs(math.sin(phase)) * temp_amplitude
-        next_token = torch.multinomial(torch.softmax(logits[:, -1, :] / temp, dim=-1), 1)
-        next_token = (torch.Tensor(next_token).int())
+        next_token = torch.multinomial(
+            torch.softmax(logits[:, -1, :] / temp, dim=-1), 1
+        )
+        next_token = torch.Tensor(next_token).int()
         initial_context = torch.cat([initial_context, next_token], dim=-1)
         token = next_token.item()
         char = tokenizer.decode([int(token)])
@@ -47,11 +51,12 @@ if __name__ == "__main__":
     input_tokens = ds.tokenizer.tokenize(FAUSTUS)
     input_tokens = torch.Tensor(input_tokens).int().unsqueeze(0)
     model = Transformer(vocab_size=ds.tokenizer.vocab_size)
-    model.load_state_dict(torch.load("best-model.pth", weights_only=True, map_location=device))
+    model.load_state_dict(
+        torch.load("best-model.pth", weights_only=True, map_location=device)
+    )
 
     model.to(device)
     input_tokens = input_tokens.to(device)
 
     initial_context = input_tokens
     out = generate(model, initial_context, max_len=int(1e18))
-
