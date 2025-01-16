@@ -16,9 +16,6 @@ from infer import generate
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-
-
-
 def train():
     dataset = TextDataset(BILL_PATH)
     loader = DataLoader(dataset, batch_size=16, shuffle=True)
