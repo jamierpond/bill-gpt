@@ -1,3 +1,10 @@
+FAUSTUS = """
+  FAUSTUS. Settle thy studies, Faustus, and begin
+    To sound the depth of that thou wilt profess.
+    Having commenced, be a divine in show,
+    Yet level at the end of every art,
+    And live and die in Aristotle's works.
+"""
 import tqdm
 import torch.nn.functional as F
 import torch
@@ -10,13 +17,6 @@ from infer import generate
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-FAUSTUS = """
-Settle thy studies, Faustus, and begin
-To sound the depth of that thou wilt profess.
-Having commenced, be a divine in show,
-Yet level at the end of every art,
-And live and die in Aristotle's works.
-"""
 
 
 def train():

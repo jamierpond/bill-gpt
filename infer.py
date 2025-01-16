@@ -1,5 +1,4 @@
 import torch
-from torch.utils.data import DataLoader
 from data import BILL_PATH, DumbTokenizer, TextDataset
 from model import Transformer
 
@@ -19,18 +18,14 @@ def generate(model, initial_context, max_len=256, temp=0.8):
     print()
 
 
-prompt = """
-ROMEO:
-    O, strike my face. I am the dragon
-"""
+from train import FAUSTUS
 
 if __name__ == "__main__":
     ds = TextDataset(BILL_PATH)
-    # input_tokens, _ = ds[5000]
-    input_tokens = ds.tokenizer.tokenize(prompt)
+    input_tokens = ds.tokenizer.tokenize(FAUSTUS)
     input_tokens = torch.Tensor(input_tokens).int().unsqueeze(0)
     model = Transformer(vocab_size=ds.tokenizer.vocab_size)
-    model.load_state_dict(torch.load("model.pth", weights_only=True))
+    model.load_state_dict(torch.load("best-model.pth", weights_only=True))
 
     model.to("cuda")
     input_tokens = input_tokens.to("cuda")
