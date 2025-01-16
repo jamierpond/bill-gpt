@@ -6,7 +6,6 @@ import tiktoken
 
 THIS_DIR = Path(__file__).parent
 BILL_PATH = THIS_DIR / Path("data/bill.txt")
-# VOCAB_SIZE = 256 tiktoken.get_encoding("cl100k_base").max_token_value
 
 
 class DumbTokenizer:
