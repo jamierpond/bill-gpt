@@ -1,8 +1,8 @@
+from .data import BILL_PATH, DumbTokenizer, TextDataset
+from .model import Transformer
+from .train import FAUSTUS
 import torch
-from data import BILL_PATH, DumbTokenizer, TextDataset
-from model import Transformer
 import math
-from train import FAUSTUS
 
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -14,7 +14,12 @@ def advance_sine_phase(current_phase, freq, num_steps):
         new -= 2 * math.pi
     return new
 
-def generate(model, initial_context, max_len=256, temp=0.8, process_fn=None, infinite=False):
+
+def print_token_str(token_str):
+    print(token_str, end="")
+
+
+def generate(model, initial_context, max_len=256, temp=0.8, next_token_callback=print_token_str):
     tokenizer = DumbTokenizer()
 
     cycle_size_samples = 50
@@ -34,12 +39,7 @@ def generate(model, initial_context, max_len=256, temp=0.8, process_fn=None, inf
         initial_context = torch.cat([initial_context, next_token], dim=-1)
         token = next_token.item()
         char = tokenizer.decode([int(token)])
-
-        # do something fun with the output!
-        if process_fn is not None:
-            char = process_fn(char)
-
-        print(char, end="")
+        char = next_token_callback(char)
 
 
 if __name__ == "__main__":

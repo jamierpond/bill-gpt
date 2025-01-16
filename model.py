@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from attention import MultiHeadAttention
+from .attention import MultiHeadAttention
 
 class Transformer(nn.Module):
     def __init__(self, vocab_size, dim=128, depth=16, heads=8):

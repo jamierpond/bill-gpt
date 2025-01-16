@@ -10,9 +10,9 @@ import torch.nn.functional as F
 import torch
 from torch.optim import AdamW
 from torch.utils.data import DataLoader
-from data import TextDataset, BILL_PATH
-from model import Transformer
-from infer import generate
+from .data import TextDataset, BILL_PATH
+from .model import Transformer
+from .infer import generate
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
