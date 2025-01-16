@@ -54,10 +54,6 @@ class MultiHeadAttention(nn.Module):
             ), f"mask shape {mask.shape} must match attention_weights shape {attention_weights.shape}"
             attention_weights = attention_weights.masked_fill(mask, float("-inf"))
 
-        #         causal_mask = torch.triu(torch.ones(seq_len, seq_len), diagonal=1).bool()
-        #         causal_mask = causal_mask.to(x.device)
-        #         attention_weights = attention_weights.masked_fill(causal_mask, float('-inf'))
-
         attention_weights = F.softmax(attention_weights, dim=-1)
 
         # Apply attention to values

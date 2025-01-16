@@ -43,8 +43,6 @@ def train():
 
             logits = model(x)
 
-            # Reshape logits and target for loss calculation
-            # Use contiguous() to ensure proper memory layout
             logits = logits.view(-1, vocab_size).contiguous()
             targets = y.view(-1).contiguous()
 
